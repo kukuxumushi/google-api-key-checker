@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google API Key Checker</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔑 API Key Checker</h1>
+      <p class="subtitle">Google / Gemini API key scanner</p>
+    </header>
+
+    <div class="controls">
+      <button id="btn-clear" title="Clear all stored keys">🗑️ Clear All</button>
+    </div>
+
+    <div id="no-keys" class="empty-state">
+      <p>No API keys found yet.</p>
+      <p class="hint">Browse websites — keys will be detected automatically.</p>
+    </div>
+
+    <div id="keys-list" class="keys-list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
