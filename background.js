@@ -223,6 +223,9 @@ function enqueueKeysFound(keys, pageUrl, pageTitle) {
 // --- Core key processing ---
 
 async function handleKeysFound(keys, pageUrl, pageTitle) {
+  // Never record chrome-extension:// URLs as source pages
+  if (pageUrl && pageUrl.startsWith("chrome-extension://")) return;
+
   const results = await loadResults();
   const keysToCheck = [];
 
@@ -327,11 +330,25 @@ const API_KEY_REGEX = /AIzaSy[\w-]{33}/g;
 
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
+    // Ignore requests made by this extension itself (our own Gemini API checks)
+    if (details.initiator && details.initiator.startsWith("chrome-extension://")) return;
+
     const matches = details.url.match(API_KEY_REGEX);
-    if (matches) {
-      const keys = [...new Set(matches)];
-      const pageUrl = details.initiator || details.documentUrl || details.url;
-      enqueueKeysFound(keys, pageUrl, "");
+    if (!matches) return;
+
+    const keys = [...new Set(matches)];
+
+    // Resolve the actual tab URL instead of using initiator/documentUrl
+    if (details.tabId && details.tabId >= 0) {
+      chrome.tabs.get(details.tabId, (tab) => {
+        if (chrome.runtime.lastError || !tab) {
+          enqueueKeysFound(keys, details.documentUrl || details.url, "");
+        } else {
+          enqueueKeysFound(keys, tab.url || details.url, tab.title || "");
+        }
+      });
+    } else {
+      enqueueKeysFound(keys, details.documentUrl || details.url, "");
     }
   },
   { urls: ["<all_urls>"] }
